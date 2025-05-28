@@ -3,6 +3,10 @@ provider "aws" {
   region = "eu-west-1"  
   profile = "sandbox"  # Use your AWS CLI profile
 }
+variable "lambda_s3_key" {
+  description = "Git commit SHA used for S3 object path"
+  type        = string
+}
 
 # Create Lambda function from S3 ZIP
 resource "aws_lambda_function" "create_task" {
