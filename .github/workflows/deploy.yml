@@ -64,4 +64,4 @@ jobs:
         run: |
           cd terraform/
           terraform init
-          terraform apply -auto-approve -var="lambda_s3_key=${{ github.sha }}"
+          terraform apply -auto-approve
