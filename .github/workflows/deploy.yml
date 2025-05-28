@@ -47,11 +47,6 @@ jobs:
         run: |
           cd lambdas/
           aws s3 cp *.zip s3://lambdacicdtest0123/lambda-zips/${{ github.sha }}/
-          echo "Lambdas uploaded to S3!"
+          echo "Uploaded: $(ls *.zip)"
 
-      # Deploy with Terraform
-      - name: Terraform Apply
-        run: |
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+    
