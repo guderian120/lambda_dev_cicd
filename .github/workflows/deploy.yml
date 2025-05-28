@@ -46,6 +46,7 @@ jobs:
       - name: Upload to S3
         run: |
           cd lambdas/
+          echo "Uploaded: $(ls *.zip)"
           aws s3 cp *.zip s3://lambdacicdtest0123/lambda-zips/
           echo "Uploaded: $(ls *.zip)"
 
