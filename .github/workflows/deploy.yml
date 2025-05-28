@@ -49,7 +49,7 @@ jobs:
           cd lambdas/
           echo "Files to upload: $(ls *.zip)"
           for zipfile in *.zip; do
-            aws s3 cp "$zipfile" "s3://lambdacicdtest0123/lambda-zips/${{ github.sha }}/$zipfile"
+            aws s3 cp "$zipfile" "s3://lambdacicdtest0123/lambda-zips/$zipfile"
             
             done
             echo "Lambdas uploaded to S3!"
