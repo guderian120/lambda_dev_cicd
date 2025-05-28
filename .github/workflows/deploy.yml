@@ -20,6 +20,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::288761743924:role/github-actions-lambda-role
           aws-region: eu-west-1
+      
       # Install Python (for Lambda dependencies)
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -27,7 +28,6 @@ jobs:
           python-version: "3.12"
 
       # Zip Lambda code
-     # Zip all Lambda directories
       - name: Package Lambdas
         run: |
           cd lambdas/
@@ -43,11 +43,11 @@ jobs:
             zip -g "../${dir%/}.zip" *.py
             cd ..
           done
+
       - name: Upload to S3
         run: |
           cd lambdas/
-          echo "Uploaded: $(ls *.zip)"
-          aws s3 cp *.zip s3://lambdacicdtest0123/lambda-zips/
-          echo "Uploaded: $(ls *.zip)"
-
-    
+          echo "Files to upload: $(ls *.zip)"
+          for zipfile in *.zip; do
+            aws s3 cp "$zipfile" "s3://lambdacicdtest0123/lambda-zips/$zipfile"
+          done
