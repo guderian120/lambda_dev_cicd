@@ -68,6 +68,7 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          cd terraform/
           gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --decrypt terraform.tfstate.gpg > terraform.tfstate
 
       # Initialize and apply Terraform
