@@ -1,7 +1,7 @@
 # Configure AWS provider
 provider "aws" {
   region = "eu-west-1"
-  # profile = "sandbox"  # Uncomment if using named profile
+  profile = "sandbox"  # Uncomment if using named profile
 }
 
 # Reference an existing IAM role by name
