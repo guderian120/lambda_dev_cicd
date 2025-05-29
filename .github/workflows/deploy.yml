@@ -54,10 +54,21 @@ jobs:
             done
             echo "Lambdas uploaded to S3!"
 
-
+  Terraform_Setup:
+    runs-on: ubuntu-latest
+    steps:
         # Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      - name: Install GPG
+        run: sudo apt-get update && sudo apt-get install -y gnupg
+
+      - name: Decrypt Terraform state
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --decrypt terraform.tfstate.gpg > terraform.tfstate
 
       # Initialize and apply Terraform
       - name: Terraform Apply
