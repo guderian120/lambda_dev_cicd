@@ -1,7 +1,7 @@
 # Configure AWS provider (replace with your region)
 provider "aws" {
   region = "eu-west-1"  
-  profile = "sandbox"  # Use your AWS CLI profile
+  # profile = "sandbox"  # Use your AWS CLI profile
 }
 
 # Create Lambda function from S3 ZIP
