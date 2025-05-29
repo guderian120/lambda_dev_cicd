@@ -5,61 +5,72 @@ on:
     branches: [main]
 
 permissions:
-  id-token: write   # Required for OIDC
-  contents: read    # Required to checkout code
+  id-token: write    # Required for OIDC auth with AWS
+  contents: read     # Required to fetch code
 
 jobs:
   deploy:
+    name: Package and Upload Lambda Functions
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      # Authenticate with AWS using OIDC
+      # AWS Auth via OIDC
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::288761743924:role/github-actions-lambda-role
           aws-region: eu-west-1
-      
-      # Install Python (for Lambda dependencies)
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
 
-      # Zip Lambda code
+      # Package each Lambda
       - name: Package Lambdas
         run: |
           cd lambdas/
           for dir in */; do
-            echo "Zipping $dir..."
+            echo "Packaging $dir..."
             cd "$dir"
-            # Install Python deps if requirements.txt exists
+
+            mkdir -p package
+
             if [ -f "requirements.txt" ]; then
               pip install -r requirements.txt -t ./package
-              zip -r9 "../${dir%/}.zip" ./package/
             fi
-            # Zip the Lambda code
-            zip -g "../${dir%/}.zip" *.py
-            cd ..
+
+            cp *.py ./package/
+            cd package
+            zip -r9 "../../${dir%/}.zip" ./
+            cd ../..
           done
 
+      # Upload packaged Lambdas to S3
       - name: Upload to S3
         run: |
           cd lambdas/
-          echo "Files to upload: $(ls *.zip)"
           for zipfile in *.zip; do
+            echo "Uploading $zipfile to S3..."
             aws s3 cp "$zipfile" "s3://lambdacicdtest0123/lambda-zips/$zipfile"
-            
-            done
-            echo "Lambdas uploaded to S3!"
+          done
+          echo "All Lambda packages uploaded!"
 
-  Terraform_Setup:
+  terraform:
+    name: Apply Terraform Configuration
     runs-on: ubuntu-latest
+    needs: deploy  # Ensures Lambda packaging/upload completes first
+
     steps:
-        # Set up Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::288761743924:role/github-actions-lambda-role
+          aws-region: eu-west-1
 
       - name: Install GPG
         run: sudo apt-get update && sudo apt-get install -y gnupg
@@ -68,13 +79,13 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          echo "$(pwd)"
-          echo "$(ls -la)"
           cd terraform/
-          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --decrypt terraform.tfstate.gpg > terraform.tfstate
+          gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --output terraform.tfstate --decrypt terraform.tfstate.gpg
 
-      # Initialize and apply Terraform
-      - name: Terraform Apply
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init and Apply
         run: |
           cd terraform/
           terraform init
