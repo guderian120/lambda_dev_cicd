@@ -1,9 +1,19 @@
 # Configure AWS provider (replace with your region)
 provider "aws" {
   region = "eu-west-1"  
+
   # profile = "sandbox"  # Use your AWS CLI profile
 }
 
+data "aws_iam_role" "lambda_role" {
+  name = "lambda-execution-role"
+}
+
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = data.aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
 # Create Lambda function from S3 ZIP
 resource "aws_lambda_function" "create_task" {
   function_name = "create_task"  # Name of the Lambda function
@@ -28,27 +38,27 @@ resource "aws_lambda_function" "delete_task" {
 #   source_code_hash = filebase64sha256("${path.module}./src/create_task/function.zip")
 }
 
-# Minimal IAM role for Lambd
-resource "aws_iam_role" "lambda_role" {
-  name = "lambda-execution-role"
+# # Minimal IAM role for Lambd
+# resource "aws_iam_role" "lambda_role" {
+#   name = "lambda-execution-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [{
+#       Action = "sts:AssumeRole"
+#       Effect = "Allow"
+#       Principal = {
+#         Service = "lambda.amazonaws.com"
+#       }
+#     }]
+#   })
+# }
 
-# Allow Lambda to write log
-resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
+# # Allow Lambda to write log
+# resource "aws_iam_role_policy_attachment" "lambda_logs" {
+#   role       = aws_iam_role.lambda_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+# }
 
 
 
